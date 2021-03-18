@@ -7,15 +7,13 @@ namespace Reviewer.Core
 {
     public partial class EditBusinessPage : ContentPage
     {
-        bool isNew;
-        EditBusinessViewModel viewModel;
+        readonly EditBusinessViewModel viewModel;
 
         public EditBusinessPage()
         {
             InitializeComponent();
 
-            viewModel = new EditBusinessViewModel();
-            BindingContext = viewModel;
+            BindingContext = viewModel = new EditBusinessViewModel();
         }
 
         protected override void OnAppearing()

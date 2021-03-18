@@ -9,6 +9,6 @@ namespace Reviewer.Core
 
         Task<AuthenticationResult?> Login();
         Task<AuthenticationResult?> GetCachedSignInToken();
-        void Logout();
+        Task Logout();
     }
 }

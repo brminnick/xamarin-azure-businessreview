@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using AsyncAwaitBestPractices.MVVM;
 using Plugin.Media;
 using Plugin.Media.Abstractions;
 using Reviewer.SharedModels;
@@ -14,12 +15,12 @@ namespace Reviewer.Core
     class EditReviewViewModel : BaseViewModel
     {
         readonly AsyncAwaitBestPractices.WeakEventManager weakEventManager = new();
+        readonly IIdentityService idService;
 
         bool isNew;
         List<ImageSource> photos = Enumerable.Empty<ImageSource>().ToList();
         List<ImageSource> videos = Enumerable.Empty<ImageSource>().ToList();
 
-        IIdentityService idService;
 
         public EditReviewViewModel(string businessId, string businessName) :
             this(new Review { Id = Guid.NewGuid().ToString(), BusinessId = businessId, BusinessName = businessName })
@@ -31,8 +32,8 @@ namespace Reviewer.Core
         {
             Review = theReview;
 
-            SaveCommand = new Command(async () => await ExecuteSaveCommand());
-            TakePhotoCommand = new Command(async () => await ExecuteTakePhotoCommand());
+            SaveCommand = new AsyncCommand(ExecuteSaveCommand);
+            TakePhotoCommand = new AsyncCommand(ExecuteTakePhotoCommand);
 
             Title = "A Review";
 
@@ -44,7 +45,7 @@ namespace Reviewer.Core
 
             var thePhotos = new List<ImageSource>();
 
-            if (Review.Photos != null)
+            if (!Review.Photos.Any())
             {
                 foreach (var photo in Review.Photos)
                 {
@@ -53,15 +54,11 @@ namespace Reviewer.Core
 
                 Photos = thePhotos;
             }
-            else
-            {
-                Review.Photos = new List<string>();
-            }
 
             Photos.Insert(0, ImageSource.FromFile("ic_camera_enhance_black"));
 
             var theVideos = new List<ImageSource>();
-            if (Review.Videos != null)
+            if (!Review.Videos.Any())
             {
                 foreach (var video in Review.Videos)
                 {
@@ -69,10 +66,6 @@ namespace Reviewer.Core
                 }
 
                 Videos = theVideos;
-            }
-            else
-            {
-                Review.Videos = new List<Video>();
             }
 
             Videos.Insert(0, ImageSource.FromFile("ic_movie_black"));
@@ -210,7 +203,7 @@ namespace Reviewer.Core
 
         async Task UploadPhoto(MediaFile mediaFile)
         {
-            UploadProgress progressUpdater = new UploadProgress();
+            var progressUpdater = new UploadProgress();
 
             using var mediaStream = mediaFile.GetStream();
             var storageService = DependencyService.Get<IStorageService>();

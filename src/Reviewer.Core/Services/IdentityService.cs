@@ -13,12 +13,12 @@ namespace Reviewer.Core
 {
     public class IdentityService : IIdentityService
     {
-        static readonly string Tenant = "b2cbuild.onmicrosoft.com";
-        static readonly string ClientID = "adc26e3b-2568-4007-810d-6cc94e7416de";
-        static readonly string SignUpAndInPolicy = "B2C_1_Reviewer_SignUpIn";
+        const string Tenant = "b2cbuild.onmicrosoft.com";
+        const string ClientID = "adc26e3b-2568-4007-810d-6cc94e7416de";
+        const string SignUpAndInPolicy = "B2C_1_Reviewer_SignUpIn";
 
-        static readonly string AuthorityBase = $"https://login.microsoftonline.com/tfp/{Tenant}/";
-        static readonly string Authority = $"{AuthorityBase}{SignUpAndInPolicy}";
+        const string AuthorityBase = "https://login.microsoftonline.com/tfp/" + Tenant + "/";
+        const string Authority = AuthorityBase + SignUpAndInPolicy;
 
         static readonly string[] Scopes = { "https://b2cbuild.onmicrosoft.com/reviewer/rvw_all" };
 
@@ -38,15 +38,8 @@ namespace Reviewer.Core
             // Token not in cache - call adb2c to acquire it
             try
             {
-                msalResult = await msaClient.AcquireTokenAsync(Scopes,
-                                                           GetUserByPolicy(msaClient.Users,
-                                                                           SignUpAndInPolicy),
-                                                           UIBehavior.ForceLogin,
-                                                           null,
-                                                           null,
-                                                           Authority,
-                                                           UIParent);
-                if (msalResult?.User != null)
+                msalResult = await msaClient.AcquireTokenInteractive(Scopes).ExecuteAsync();
+                if (msalResult?.Account != null)
                 {
                     var parsed = ParseIdToken(msalResult.IdToken);
                     DisplayName = parsed["name"]?.ToString() ?? string.Empty;
@@ -54,7 +47,7 @@ namespace Reviewer.Core
             }
             catch (MsalServiceException ex)
             {
-                if (ex.ErrorCode == MsalClientException.AuthenticationCanceledError)
+                if (ex.ErrorCode is "authentication_canceled")
                 {
                     System.Diagnostics.Debug.WriteLine("User cancelled");
                 }
@@ -81,12 +74,8 @@ namespace Reviewer.Core
             try
             {
                 // This checks to see if there's already a user in the cache
-                var authResult = await msaClient.AcquireTokenSilentAsync(Scopes,
-                                                               GetUserByPolicy(msaClient.Users,
-                                                                               SignUpAndInPolicy),
-                                                               Authority,
-                                                               false);
-                if (authResult?.User != null)
+                var authResult = await msaClient.AcquireTokenSilent(Scopes, GetUserByPolicy(await msaClient.GetAccountsAsync(), SignUpAndInPolicy)).ExecuteAsync();
+                if (authResult?.Account != null)
                 {
                     var parsed = ParseIdToken(authResult.IdToken);
                     DisplayName = parsed["name"]?.ToString() ?? string.Empty;
@@ -103,11 +92,12 @@ namespace Reviewer.Core
             return null;
         }
 
-        public void Logout()
+        public async Task Logout()
         {
-            foreach (var user in msaClient.Users)
+            var users = await msaClient.GetAccountsAsync();
+            foreach (var user in users)
             {
-                msaClient.Remove(user);
+                await msaClient.RemoveAsync(user);
             }
         }
 

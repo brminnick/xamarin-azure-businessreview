@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using AsyncAwaitBestPractices;
+using AsyncAwaitBestPractices.MVVM;
 using Reviewer.Services;
 using Reviewer.SharedModels;
 using Xamarin.Forms;
@@ -18,12 +19,12 @@ namespace Reviewer.Core
 
         public BusinessListViewModel()
         {
-            RefreshCommand = new Command(async () => await ExecuteRefreshCommand());
+            RefreshCommand = new AsyncCommand(ExecuteRefreshCommand);
 
             CheckLoginStatus().SafeFireAndForget();
         }
 
-        public ICommand RefreshCommand { get; }
+        public IAsyncCommand RefreshCommand { get; }
 
         public List<Business> Businesses
         {
@@ -37,14 +38,13 @@ namespace Reviewer.Core
             set => SetProperty(ref isLoggedIn, value);
         }
 
-
         public async Task CheckLoginStatus()
         {
             var idService = DependencyService.Get<IIdentityService>();
 
             var authResult = await idService.GetCachedSignInToken();
 
-            IsLoggedIn = authResult?.User != null;
+            IsLoggedIn = authResult?.Account != null;
         }
 
         async Task ExecuteRefreshCommand()

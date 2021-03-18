@@ -1,24 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using Xamarin.Forms;
-using Xamarin.Forms.Xaml;
+﻿using Xamarin.Forms;
 
 namespace Reviewer.Core
 {
-    public class BusinessCell : ViewCell
+    public partial class BusinessCellView : Frame
     {
-        public BusinessCell()
-        {
-            View = new BusinessCellView();
-        }
-    }
-
-    [XamlCompilation(XamlCompilationOptions.Compile)]
-    public partial class BusinessCellView : ContentView
-    {
-        public BusinessCellView()
-        {
-            InitializeComponent();
-        }
+        public BusinessCellView() => InitializeComponent();
     }
 }

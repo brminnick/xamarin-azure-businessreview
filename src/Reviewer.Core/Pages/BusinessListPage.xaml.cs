@@ -1,46 +1,34 @@
 ﻿using System;
-using System.Collections.Generic;
-
-using Xamarin.Forms;
 using Reviewer.SharedModels;
+using Xamarin.Forms;
 
 namespace Reviewer.Core
 {
     public partial class BusinessListPage : ContentPage
     {
-        BusinessListViewModel vm;
+        readonly BusinessListViewModel viewModel;
 
         public BusinessListPage()
         {
             InitializeComponent();
 
-            vm = new BusinessListViewModel();
-            BindingContext = vm;
-
+            BindingContext = viewModel = new BusinessListViewModel();
 
             allBusList.ItemTapped += (sender, args) => allBusList.SelectedItem = null;
+            allBusList.ItemSelected += listItemSelected;
+            addNewReview.Clicked += HandleAddNewClicked;
 
-            vm.Title = "Businesses";
+            viewModel.Title = "Businesses";
         }
 
         protected async override void OnAppearing()
         {
             base.OnAppearing();
 
-            addNewReview.Clicked += HandleAddNewClicked;
-            allBusList.ItemSelected += listItemSelected;
-            vm.RefreshCommand.Execute(null);
+            await viewModel.RefreshCommand.ExecuteAsync();
 
-            if (!vm.IsLoggedIn)
-                await vm.CheckLoginStatus();
-        }
-
-        protected override void OnDisappearing()
-        {
-            base.OnDisappearing();
-
-            addNewReview.Clicked -= HandleAddNewClicked;
-            allBusList.ItemSelected -= listItemSelected;
+            if (!viewModel.IsLoggedIn)
+                await viewModel.CheckLoginStatus();
         }
 
         async void HandleAddNewClicked(object sender, EventArgs eventArgs)

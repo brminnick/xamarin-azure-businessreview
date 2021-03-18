@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using Xamarin.Forms;
+﻿using Xamarin.Forms;
 
 namespace Reviewer.Core
 {
-    public partial class VideoPreviewCellView : ContentView
+    public partial class VideoPreviewCellView : Frame
     {
         public VideoPreviewCellView()
         {

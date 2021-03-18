@@ -120,7 +120,7 @@ namespace Reviewer.Core
                 IsBusy = false;
             }
 
-            if (authResult?.User == null)
+            if (authResult?.Account is null)
             {
                 LoggedIn = false;
                 Info = notLoggedInInfo;
@@ -140,10 +140,7 @@ namespace Reviewer.Core
 
         async Task ExecuteRefreshCommand()
         {
-            if (IsBusy)
-                return;
-
-            if (NotLoggedIn)
+            if (IsBusy || NotLoggedIn || authResult is null)
                 return;
 
             try
@@ -169,7 +166,7 @@ namespace Reviewer.Core
                 IsBusy = true;
                 authResult = await identityService.GetCachedSignInToken();
 
-                if (authResult?.User != null)
+                if (authResult?.Account != null)
                 {
                     LoggedIn = true;
 

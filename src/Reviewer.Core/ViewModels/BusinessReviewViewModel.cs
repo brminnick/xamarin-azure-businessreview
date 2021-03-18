@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using AsyncAwaitBestPractices;
+using AsyncAwaitBestPractices.MVVM;
 using Reviewer.SharedModels;
 using Xamarin.Forms;
 
@@ -20,7 +21,7 @@ namespace Reviewer.Core
         {
             this.business = business;
 
-            RefreshCommand = new Command(async () => await ExecuteRefreshCommand());
+            RefreshCommand = new AsyncCommand(ExecuteRefreshCommand);
 
             Title = Business.Name;
 
@@ -53,7 +54,7 @@ namespace Reviewer.Core
 
             var authResult = await idService.GetCachedSignInToken();
 
-            IsLoggedIn = authResult?.User != null;
+            IsLoggedIn = authResult?.Account != null;
         }
 
         async Task ExecuteRefreshCommand()

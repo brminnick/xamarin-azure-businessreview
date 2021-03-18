@@ -6,35 +6,17 @@ namespace Reviewer.Core
 {
     public partial class AccountPage : ContentPage
     {
-        readonly AccountViewModel vm;
+        readonly AccountViewModel viewModel;
 
         public AccountPage()
         {
             InitializeComponent();
 
-            vm = new AccountViewModel();
+            BindingContext = viewModel = new AccountViewModel();
 
-            BindingContext = vm;
-
-            authorReviewList.ItemTapped += (sender, e) => authorReviewList.SelectedItem = null;
-        }
-
-        protected override void OnAppearing()
-        {
-            base.OnAppearing();
-
-            vm.UnsuccessfulSignIn += UnsuccessfulSignIn;
+            viewModel.UnsuccessfulSignIn += UnsuccessfulSignIn;
             authorReviewList.ItemSelected += ListItemSelected;
-
-            vm.RefreshCommand.Execute(null);
-        }
-
-        protected override void OnDisappearing()
-        {
-            base.OnDisappearing();
-
-            vm.UnsuccessfulSignIn -= UnsuccessfulSignIn;
-            authorReviewList.ItemSelected -= ListItemSelected;
+            authorReviewList.ItemTapped += (sender, e) => authorReviewList.SelectedItem = null;
         }
 
         protected async void ListItemSelected(object sender, SelectedItemChangedEventArgs args)

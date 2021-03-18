@@ -8,6 +8,7 @@ using Xamarin.Forms;
 using Reviewer.Services;
 using System.Threading;
 using System.Diagnostics;
+using System.Web;
 
 namespace Reviewer.Core
 {
@@ -86,7 +87,7 @@ namespace Reviewer.Core
             // easiest way is to make it ino a URI and parse it with URI.ParseQueryString
 
             var fakeTokenUri = new Uri($"http://localhost{tokenQueryString}");
-            var queryStringParts = fakeTokenUri.ParseQueryString();
+            var queryStringParts = HttpUtility.ParseQueryString(fakeTokenUri.ToString());
 
             var endDateString = queryStringParts["se"];
 

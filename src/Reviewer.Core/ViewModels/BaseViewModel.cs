@@ -4,9 +4,8 @@ namespace Reviewer.Core
 {
     class BaseViewModel : ObservableObject
     {
-        string title = string.Empty;
-
         bool isBusy;
+        string title = string.Empty;
 
         public bool IsNotBusy => !IsBusy;
 

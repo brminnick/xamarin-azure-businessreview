@@ -1,22 +1,18 @@
 ﻿using System;
-using System.Collections.Generic;
-
-using Xamarin.Forms;
 using Reviewer.SharedModels;
+using Xamarin.Forms;
 
 namespace Reviewer.Core
 {
     public partial class BusinessReviewsPage : ContentPage
     {
-        BusinessReviewViewModel vm;
+        readonly BusinessReviewViewModel viewModel;
 
         public BusinessReviewsPage(Business business)
         {
             InitializeComponent();
 
-            vm = new BusinessReviewViewModel(business);
-
-            BindingContext = vm;
+            BindingContext = viewModel = new BusinessReviewViewModel(business);
 
             reviewList.ItemTapped += (sender, args) => reviewList.SelectedItem = null;
         }
@@ -28,7 +24,7 @@ namespace Reviewer.Core
             reviewList.ItemSelected += ReviewList_ItemSelected;
             addNewReview.Clicked += AddNewReview_Clicked;
 
-            vm.RefreshCommand.Execute(null);
+            viewModel.RefreshCommand.Execute(null);
         }
 
         protected override void OnDisappearing()
@@ -41,7 +37,7 @@ namespace Reviewer.Core
 
         async void AddNewReview_Clicked(object sender, EventArgs e)
         {
-            var editPage = new EditReviewPage(vm.Business.Id, vm.Business.Name);
+            var editPage = new EditReviewPage(viewModel.Business.Id, viewModel.Business.Name);
 
             await Navigation.PushModalAsync(new NavigationPage(editPage));
         }
@@ -52,7 +48,7 @@ namespace Reviewer.Core
             if (review == null)
                 return;
 
-            await Navigation.PushAsync(new ReviewDetailPage(review, vm.Business));
+            await Navigation.PushAsync(new ReviewDetailPage(review, viewModel.Business));
         }
     }
 }

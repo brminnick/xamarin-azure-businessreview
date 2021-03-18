@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using Xamarin.Forms;
+﻿using Xamarin.Forms;
 
 namespace Reviewer.Core
 {
-    public partial class PhotoPreviewCellView : ContentView
+    public partial class PhotoPreviewCellView : Frame
     {
-        public PhotoPreviewCellView()
-        {
-            InitializeComponent();
-        }
+        public PhotoPreviewCellView() => InitializeComponent();
     }
 }
