@@ -1,20 +1,19 @@
 ﻿using System;
-using Microsoft.Identity.Client;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Xamarin.Forms;
+using Microsoft.Identity.Client;
 using Newtonsoft.Json.Linq;
-using System.Collections.Generic;
-using Reviewer.Core;
-using System.Linq;
 
-[assembly: Dependency(typeof(IdentityService))]
 namespace Reviewer.Core
 {
     public class IdentityService : IIdentityService
     {
+        public const string ClientID = "adc26e3b-2568-4007-810d-6cc94e7416de";
+        public const string RedirectUrl = "msal" + ClientID + "://auth";
+
         const string Tenant = "b2cbuild.onmicrosoft.com";
-        const string ClientID = "adc26e3b-2568-4007-810d-6cc94e7416de";
         const string SignUpAndInPolicy = "B2C_1_Reviewer_SignUpIn";
 
         const string AuthorityBase = "https://login.microsoftonline.com/tfp/" + Tenant + "/";
@@ -22,9 +21,7 @@ namespace Reviewer.Core
 
         static readonly string[] Scopes = { "https://b2cbuild.onmicrosoft.com/reviewer/rvw_all" };
 
-        static readonly string RedirectUrl = $"msal{ClientID}://auth";
-
-        readonly IPublicClientApplication msaClient = PublicClientApplicationBuilder.Create(ClientID).WithRedirectUri(RedirectUrl).Build();
+        readonly IPublicClientApplication msaClient = PublicClientApplicationBuilder.Create(ClientID).WithIosKeychainSecurityGroup("com.microsoft.adalcache").WithRedirectUri(RedirectUrl).Build();
 
         public string DisplayName { get; set; } = string.Empty;
 

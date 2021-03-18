@@ -15,7 +15,7 @@ namespace Reviewer.Core
             BindingContext = viewModel = new BusinessListViewModel();
 
             allBusList.ItemTapped += (sender, args) => allBusList.SelectedItem = null;
-            allBusList.ItemSelected += listItemSelected;
+            allBusList.ItemSelected += ListItemSelected;
             addNewReview.Clicked += HandleAddNewClicked;
 
             viewModel.Title = "Businesses";
@@ -25,10 +25,10 @@ namespace Reviewer.Core
         {
             base.OnAppearing();
 
-            await viewModel.RefreshCommand.ExecuteAsync();
-
             if (!viewModel.IsLoggedIn)
                 await viewModel.CheckLoginStatus();
+
+            await viewModel.RefreshCommand.ExecuteAsync();
         }
 
         async void HandleAddNewClicked(object sender, EventArgs eventArgs)
@@ -38,11 +38,9 @@ namespace Reviewer.Core
             await Navigation.PushModalAsync(editPage);
         }
 
-        protected async void listItemSelected(object sender, SelectedItemChangedEventArgs args)
+        protected async void ListItemSelected(object sender, SelectedItemChangedEventArgs args)
         {
-            var business = args.SelectedItem as Business;
-
-            if (business == null)
+            if (args.SelectedItem is not Business business)
                 return;
 
             await Navigation.PushAsync(new BusinessReviewsPage(business));

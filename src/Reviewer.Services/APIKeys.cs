@@ -1,5 +1,4 @@
-﻿using System;
-namespace Reviewer.Services
+﻿namespace Reviewer.Services
 {
     public static class APIKeys
     {

@@ -1,8 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Windows.Input;
-using AsyncAwaitBestPractices;
 using AsyncAwaitBestPractices.MVVM;
 using Reviewer.SharedModels;
 using Xamarin.Forms;
@@ -20,15 +18,12 @@ namespace Reviewer.Core
         public BusinessReviewViewModel(Business business)
         {
             this.business = business;
+            Title = business.Name;
 
             RefreshCommand = new AsyncCommand(ExecuteRefreshCommand);
-
-            Title = Business.Name;
-
-            CheckLoginStatus().SafeFireAndForget();
         }
 
-        public ICommand RefreshCommand { get; }
+        public IAsyncCommand RefreshCommand { get; }
 
         public Business Business
         {

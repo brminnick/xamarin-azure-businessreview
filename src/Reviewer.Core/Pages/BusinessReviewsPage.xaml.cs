@@ -15,24 +15,16 @@ namespace Reviewer.Core
             BindingContext = viewModel = new BusinessReviewViewModel(business);
 
             reviewList.ItemTapped += (sender, args) => reviewList.SelectedItem = null;
+            reviewList.ItemSelected += ReviewList_ItemSelected;
+            addNewReview.Clicked += AddNewReview_Clicked;
         }
 
-        protected override void OnAppearing()
+        protected override async void OnAppearing()
         {
             base.OnAppearing();
 
-            reviewList.ItemSelected += ReviewList_ItemSelected;
-            addNewReview.Clicked += AddNewReview_Clicked;
-
-            viewModel.RefreshCommand.Execute(null);
-        }
-
-        protected override void OnDisappearing()
-        {
-            base.OnDisappearing();
-
-            reviewList.ItemSelected -= ReviewList_ItemSelected;
-            addNewReview.Clicked -= AddNewReview_Clicked;
+            await viewModel.CheckLoginStatus();
+            await viewModel.RefreshCommand.ExecuteAsync();
         }
 
         async void AddNewReview_Clicked(object sender, EventArgs e)

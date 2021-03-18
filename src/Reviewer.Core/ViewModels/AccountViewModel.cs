@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
-using AsyncAwaitBestPractices;
 using AsyncAwaitBestPractices.MVVM;
 using Microsoft.Identity.Client;
 using Reviewer.SharedModels;
@@ -19,8 +18,7 @@ namespace Reviewer.Core
         readonly AsyncAwaitBestPractices.WeakEventManager weakEventManager = new();
         readonly IIdentityService identityService = DependencyService.Get<IIdentityService>();
 
-        bool loggedIn = false;
-        bool notLoggedIn = true;
+        bool loggedIn = true;
 
         string info = notLoggedInInfo;
 
@@ -33,8 +31,6 @@ namespace Reviewer.Core
             SignInCommand = new AsyncCommand(ExecuteSignInCommand);
             RefreshCommand = new AsyncCommand(ExecuteRefreshCommand);
             SignOutCommand = new Command(ExecuteSignOutCommand);
-
-            CheckLoginStatus().SafeFireAndForget();
         }
 
         public event EventHandler SuccessfulSignIn
@@ -53,20 +49,12 @@ namespace Reviewer.Core
         public ICommand RefreshCommand { get; }
         public ICommand SignOutCommand { get; }
 
-        public bool NotLoggedIn
-        {
-            get => notLoggedIn;
-            set => SetProperty(ref notLoggedIn, value);
-        }
+        public bool NotLoggedIn => !LoggedIn;
 
         public bool LoggedIn
         {
             get => loggedIn;
-            set
-            {
-                SetProperty(ref loggedIn, value);
-                NotLoggedIn = !LoggedIn;
-            }
+            set => SetProperty(ref loggedIn, value, () => OnPropertyChanged(nameof(NotLoggedIn)));
         }
 
         public List<Review> Reviews

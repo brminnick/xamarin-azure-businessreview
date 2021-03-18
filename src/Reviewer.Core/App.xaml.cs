@@ -15,7 +15,7 @@ namespace Reviewer.Core
 
             DependencyService.Register<IStorageService, StorageService>();
             DependencyService.Register<IDataService, CosmosDataService>();
-
+            DependencyService.Register<IIdentityService, IdentityService>();
             DependencyService.Register<IAPIService, WebAPIService>();
 
             var tabbedPage = new TabbedPage();

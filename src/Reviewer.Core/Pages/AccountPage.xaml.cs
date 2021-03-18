@@ -19,6 +19,13 @@ namespace Reviewer.Core
             authorReviewList.ItemTapped += (sender, e) => authorReviewList.SelectedItem = null;
         }
 
+        protected override async void OnAppearing()
+        {
+            base.OnAppearing();
+
+            await viewModel.CheckLoginStatus();
+        }
+
         protected async void ListItemSelected(object sender, SelectedItemChangedEventArgs args)
         {
             if (args.SelectedItem is not Review review)

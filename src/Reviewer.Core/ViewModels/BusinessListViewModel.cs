@@ -20,8 +20,6 @@ namespace Reviewer.Core
         public BusinessListViewModel()
         {
             RefreshCommand = new AsyncCommand(ExecuteRefreshCommand);
-
-            CheckLoginStatus().SafeFireAndForget();
         }
 
         public IAsyncCommand RefreshCommand { get; }
