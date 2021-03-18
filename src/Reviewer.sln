@@ -6,7 +6,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Reviewer.iOS", "iOS\Reviewe
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Reviewer.Droid", "Droid\Reviewer.Droid.csproj", "{C17CF1B4-3A66-4F31-85B2-122EC9828A13}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Reviewer.Core", "Reviewer.Core\Reviewer.Core.csproj", "{6A53F432-C6E2-47C7-BB82-7980AD41F49B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Reviewer.Core", "Reviewer.Core\Reviewer.Core.csproj", "{6A53F432-C6E2-47C7-BB82-7980AD41F49B}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Reviewer.Services", "Reviewer.Services\Reviewer.Services.csproj", "{5435D4CE-35DE-4465-948A-37D456E12530}"
 EndProject
@@ -14,11 +14,16 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Reviewer.SharedModels", "Re
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Web", "Web", "{D9AB1F95-CAFD-43C6-A4E3-A47FCFF31252}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Reviewer.WebAPI", "Reviewer.WebAPI\Reviewer.WebAPI.csproj", "{271D29F9-E696-475D-B3A1-B969286B3E9A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Reviewer.WebAPI", "Reviewer.WebAPI\Reviewer.WebAPI.csproj", "{271D29F9-E696-475D-B3A1-B969286B3E9A}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Functions", "Functions", "{D2A79129-85EB-4EE1-A01B-D266A3DBE571}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Reviewer.Functions", "Reviewer.Functions\Reviewer.Functions.csproj", "{DC343662-6AC2-4405-B955-D12C753F0EC6}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{53F2A16F-12DF-4464-9B05-83B89330AE73}"
+	ProjectSection(SolutionItems) = preProject
+		Directory.Build.props = Directory.Build.props
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

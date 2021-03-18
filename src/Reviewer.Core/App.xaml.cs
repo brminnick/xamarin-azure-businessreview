@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-
+﻿using Reviewer.Services;
 using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
-using Reviewer.Services;
 
 [assembly: XamlCompilation(XamlCompilationOptions.Compile)]
 namespace Reviewer.Core
@@ -27,21 +24,6 @@ namespace Reviewer.Core
             tabbedPage.Children.Add(new NavigationPage(new AccountPage()) { Title = "Me" });
 
             MainPage = tabbedPage;
-        }
-
-        protected override void OnStart()
-        {
-            base.OnStart();
-        }
-
-        protected override void OnSleep()
-        {
-            base.OnSleep();
-        }
-
-        protected override void OnResume()
-        {
-            base.OnResume();
         }
     }
 }

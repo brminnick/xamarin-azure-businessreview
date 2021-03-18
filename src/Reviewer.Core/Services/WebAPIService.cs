@@ -1,18 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Reviewer.SharedModels;
+﻿using System.Collections.Generic;
 using System.Net.Http;
-using Reviewer.Services;
-using Newtonsoft.Json;
-using System.Text;
 using System.Net.Http.Headers;
+using System.Text;
+using System.Threading.Tasks;
+using Newtonsoft.Json;
+using Reviewer.Services;
+using Reviewer.SharedModels;
 
 namespace Reviewer.Core
 {
     public class WebAPIService : IAPIService
     {
-        HttpClient webClient = new HttpClient();
+        static readonly HttpClient webClient = new();
 
         public async Task<List<Review>> GetReviewsForAuthor(string authorId, string token)
         {
@@ -55,7 +54,7 @@ namespace Reviewer.Core
 
         public async Task<string> GetContainerWriteSasToken()
         {
-            var spr = new StoragePermissionRequest { Permission = "Write" };
+            var spr = new StoragePermissionRequest(string.Empty, string.Empty, "Write");
 
             var request = new HttpRequestMessage(HttpMethod.Post, APIKeys.SASRetrievalUrl);
 
@@ -87,12 +86,12 @@ namespace Reviewer.Core
             await webClient.SendAsync(request);
         }
 
-        async Task<string> GetAccessBearerToken()
+        async Task<string?> GetAccessBearerToken()
         {
             var identityService = Xamarin.Forms.DependencyService.Get<IIdentityService>(Xamarin.Forms.DependencyFetchTarget.GlobalInstance);
 
             var authResult = await identityService.GetCachedSignInToken();
-            var bearerToken = authResult.AccessToken;
+            var bearerToken = authResult?.AccessToken;
 
             return bearerToken;
         }

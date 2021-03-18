@@ -1,39 +1,50 @@
-﻿using System;
-using Reviewer.SharedModels;
-using System.Collections.Generic;
-using System.Windows.Input;
-using Xamarin.Forms;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using System.Windows.Input;
+using AsyncAwaitBestPractices;
+using Reviewer.SharedModels;
+using Xamarin.Forms;
 
 namespace Reviewer.Core
 {
-    public class BusinessReviewViewModel : BaseViewModel
+    class BusinessReviewViewModel : BaseViewModel
     {
-        IAPIService apiService;
+        readonly IAPIService apiService = DependencyService.Get<IAPIService>();
 
         Business business;
-        public Business Business { get => business; set => SetProperty(ref business, value); }
-
-        List<Review> reviews;
-        public List<Review> Reviews { get => reviews; set => SetProperty(ref reviews, value); }
-
         bool isLoggedIn = false;
-        public bool IsLoggedIn { get => isLoggedIn; set => SetProperty(ref isLoggedIn, value); }
-
-        public ICommand RefreshCommand { get; }
+        List<Review> reviews = Enumerable.Empty<Review>().ToList();
 
         public BusinessReviewViewModel(Business business)
         {
-            apiService = DependencyService.Get<IAPIService>();
-            Business = business;
-
-            Reviews = new List<Review>();
+            this.business = business;
 
             RefreshCommand = new Command(async () => await ExecuteRefreshCommand());
 
             Title = Business.Name;
 
-            Task.Run(async () => await CheckLoginStatus());
+            CheckLoginStatus().SafeFireAndForget();
+        }
+
+        public ICommand RefreshCommand { get; }
+
+        public Business Business
+        {
+            get => business;
+            set => SetProperty(ref business, value);
+        }
+
+        public List<Review> Reviews
+        {
+            get => reviews;
+            set => SetProperty(ref reviews, value);
+        }
+
+        public bool IsLoggedIn
+        {
+            get => isLoggedIn;
+            set => SetProperty(ref isLoggedIn, value);
         }
 
         public async Task CheckLoginStatus()

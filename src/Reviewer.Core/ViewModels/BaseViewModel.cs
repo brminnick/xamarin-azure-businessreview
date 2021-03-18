@@ -1,34 +1,25 @@
-﻿using System;
-using Reviewer.SharedModels;
+﻿using Reviewer.SharedModels;
 
 namespace Reviewer.Core
 {
-    public class BaseViewModel : ObservableObject
+    class BaseViewModel : ObservableObject
     {
-        string title;
+        string title = string.Empty;
+
+        bool isBusy;
+
+        public bool IsNotBusy => !IsBusy;
+
         public string Title
         {
             get => title;
             set => SetProperty(ref title, value);
         }
 
-        bool isBusy;
         public bool IsBusy
         {
             get => isBusy;
-            set
-            {
-                SetProperty(ref isBusy, value);
-                IsNotBusy = !IsBusy;
-            }
+            set => SetProperty(ref isBusy, value, () => OnPropertyChanged(nameof(IsNotBusy)));
         }
-
-        bool isNotBusy = true;
-        public bool IsNotBusy
-        {
-            get => isNotBusy;
-            private set => SetProperty(ref isNotBusy, value);
-        }
-
     }
 }

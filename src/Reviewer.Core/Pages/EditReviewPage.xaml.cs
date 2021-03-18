@@ -16,8 +16,7 @@ namespace Reviewer.Core
         public EditReviewPage(string businessId, string businessName)
         {
             InitializeComponent();
-            vm = new EditReviewViewModel(businessId, businessName);
-            BindingContext = vm;
+            BindingContext = vm = new EditReviewViewModel(businessId, businessName);
             isNew = true;
         }
 
@@ -25,8 +24,7 @@ namespace Reviewer.Core
         {
             InitializeComponent();
 
-            vm = new EditReviewViewModel(review);
-            BindingContext = vm;
+            BindingContext = vm = new EditReviewViewModel(review);
             isNew = false;
         }
 

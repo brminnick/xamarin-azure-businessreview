@@ -24,30 +24,14 @@ namespace Reviewer.Core
 
         static readonly string RedirectUrl = $"msal{ClientID}://auth";
 
-        readonly PublicClientApplication msaClient;
+        readonly IPublicClientApplication msaClient = PublicClientApplicationBuilder.Create(ClientID).WithRedirectUri(RedirectUrl).Build();
 
-        public IdentityService()
+        public string DisplayName { get; set; } = string.Empty;
+
+        public async Task<AuthenticationResult?> Login()
         {
-            msaClient = new PublicClientApplication(ClientID);
-            msaClient.ValidateAuthority = false;
-
-            msaClient.RedirectUri = RedirectUrl;
-        }
-
-        UIParent parent;
-        public UIParent UIParent { get => parent; set => parent = value; }
-
-        public async Task<AuthenticationResult> Login()
-        {
-            AuthenticationResult msalResult = null;
-
-            // Running on Android - we need UIParent to be set to the main Activity
-            if (UIParent == null && Device.RuntimePlatform == Device.Android)
-                return msalResult;
-
             // First check if the token happens to be cached - grab silently
-            msalResult = await GetCachedSignInToken();
-
+            var msalResult = await GetCachedSignInToken();
             if (msalResult != null)
                 return msalResult;
 
@@ -65,7 +49,7 @@ namespace Reviewer.Core
                 if (msalResult?.User != null)
                 {
                     var parsed = ParseIdToken(msalResult.IdToken);
-                    DisplayName = parsed["name"]?.ToString();
+                    DisplayName = parsed["name"]?.ToString() ?? string.Empty;
                 }
             }
             catch (MsalServiceException ex)
@@ -92,7 +76,7 @@ namespace Reviewer.Core
             return msalResult;
         }
 
-        public async Task<AuthenticationResult> GetCachedSignInToken()
+        public async Task<AuthenticationResult?> GetCachedSignInToken()
         {
             try
             {
@@ -105,7 +89,7 @@ namespace Reviewer.Core
                 if (authResult?.User != null)
                 {
                     var parsed = ParseIdToken(authResult.IdToken);
-                    DisplayName = parsed["name"]?.ToString();
+                    DisplayName = parsed["name"]?.ToString() ?? string.Empty;
                 }
 
                 return authResult;
@@ -127,13 +111,11 @@ namespace Reviewer.Core
             }
         }
 
-        public string DisplayName { get; set; }
-
-        IUser GetUserByPolicy(IEnumerable<IUser> users, string policy)
+        IAccount? GetUserByPolicy(IEnumerable<IAccount> users, string policy)
         {
             foreach (var user in users)
             {
-                string userIdentifier = Base64UrlDecode(user.Identifier.Split('.')[0]);
+                string userIdentifier = Base64UrlDecode(user.HomeAccountId.Identifier.Split('.')[0]);
 
                 if (userIdentifier.EndsWith(policy.ToLower(), StringComparison.OrdinalIgnoreCase)) return user;
             }

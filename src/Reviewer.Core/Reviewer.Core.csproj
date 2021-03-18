@@ -1,19 +1,18 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>netstandard2.1</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Net.Http" Version="4.3.3" />
-    <PackageReference Include="Microsoft.Identity.Client" Version="1.1.4-preview0002" />
-    <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
-    <PackageReference Include="Xam.Plugin.Media" Version="4.0.1.1" />
-    <PackageReference Include="System.Net.Http.Formatting.Extension" Version="5.2.3" />
-    <PackageReference Include="Xamarin.Forms" Version="3.1.0.583944" />
-    <PackageReference Include="WindowsAzure.Storage" Version="9.2.0" />
-    <PackageReference Include="MonkeyCache.FileStore" Version="0.1.0.10-beta" />
+    <PackageReference Include="Microsoft.Identity.Client" Version="4.28.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="Xam.Plugin.Media" Version="5.0.1" />
+    <PackageReference Include="Xamarin.Forms" Version="5.0.0.2012" />
+    <PackageReference Include="WindowsAzure.Storage" Version="9.3.3" />
+    <PackageReference Include="MonkeyCache.FileStore" Version="1.5.2" />
   </ItemGroup>
+
   <ItemGroup>
     <Folder Include="Pages\" />
     <Folder Include="Services\" />
@@ -25,28 +24,10 @@
     <Folder Include="Interfaces\" />
     <Folder Include="Services\Mock\" />
   </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Remove="Pages\RestaurantListPage.xaml" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Update="Pages\BusinessListPage.xaml.cs">
-      <DependentUpon>BusinessListPage.xaml</DependentUpon>
-    </Compile>
-    <Compile Update="Pages\BusinessReviewsPage.xaml.cs">
-      <DependentUpon>BusinessReviewsPage.xaml</DependentUpon>
-    </Compile>
-    <Compile Update="Pages\EditReviewPage.xaml.cs">
-      <DependentUpon>EditReviewPage.xaml</DependentUpon>
-    </Compile>
-    <Compile Update="Pages\AccountPage.xaml.cs">
-      <DependentUpon>AccountPage.xaml</DependentUpon>
-    </Compile>
-    <Compile Update="Cells\VideoPreviewCellView.xaml.cs">
-      <DependentUpon>VideoPreviewCellView.xaml</DependentUpon>
-    </Compile>
-  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\Reviewer.SharedModels\Reviewer.SharedModels.csproj" />
     <ProjectReference Include="..\Reviewer.Services\Reviewer.Services.csproj" />
   </ItemGroup>
+
 </Project>

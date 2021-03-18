@@ -20,9 +20,10 @@ namespace Reviewer.Core
             Write
         }
 
-        public async Task<Uri> UploadBlob(Stream blobContent, bool isVideo, string reviewId, UploadProgress progressUpdater)
+        public async Task<Uri?> UploadBlob(Stream blobContent, bool isVideo, string reviewId, UploadProgress progressUpdater)
         {
-            Uri blobAddress = null;
+            Uri? blobAddress = null;
+
             try
             {
                 var writeCredentials = await ObtainStorageCredentials(StoragePermissionType.Write);
@@ -53,7 +54,7 @@ namespace Reviewer.Core
 
         #region Helpers
 
-        async Task<StorageCredentials> ObtainStorageCredentials(StoragePermissionType permissionType)
+        async Task<StorageCredentials?> ObtainStorageCredentials(StoragePermissionType permissionType)
         {
             var functionService = DependencyService.Get<IAPIService>();
 
@@ -62,7 +63,7 @@ namespace Reviewer.Core
             if (Barrel.Current.Exists(cacheKey) && !Barrel.Current.IsExpired(cacheKey))
                 return new StorageCredentials(Barrel.Current.Get<string>(cacheKey));
 
-            string storageToken = null;
+            string? storageToken = null;
             switch (permissionType)
             {
                 //case StoragePermissionType.List:
@@ -104,7 +105,6 @@ namespace Reviewer.Core
 
             return credentials;
         }
-
         #endregion
     }
 }

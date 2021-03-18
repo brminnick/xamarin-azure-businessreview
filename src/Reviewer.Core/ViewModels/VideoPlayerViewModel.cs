@@ -1,20 +1,28 @@
-﻿using System;
-using Reviewer.SharedModels;
+﻿using Reviewer.SharedModels;
+
 namespace Reviewer.Core
 {
-    public class VideoPlayerViewModel : BaseViewModel
+    class VideoPlayerViewModel : BaseViewModel
     {
         Video video;
-        public Video Video { get => video; set => SetProperty(ref video, value); }
-
-        public string videoUrl;
-        public string VideoUrl { get => videoUrl; set => SetProperty(ref videoUrl, value); }
+        string videoUrl;
 
         public VideoPlayerViewModel(Video video)
         {
-            this.Video = video;
+            this.video = video;
+            videoUrl = Video.HLSUrl.Replace("http:", "https:");
+        }
 
-            VideoUrl = Video.HLSUrl.Replace("http:", "https:");
+        public Video Video
+        {
+            get => video;
+            set => SetProperty(ref video, value);
+        }
+
+        public string VideoUrl
+        {
+            get => videoUrl;
+            set => SetProperty(ref videoUrl, value);
         }
     }
 }

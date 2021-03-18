@@ -13,11 +13,11 @@ namespace Reviewer.Services
 {
     public class CosmosDataService : IDataService
     {
-        string databaseName = "BuildReviewer";
-        string businessCollectionName = "Businesses";
-        string reviewCollectionName = "Reviews";
+        const string databaseName = "BuildReviewer";
+        const string businessCollectionName = "Businesses";
+        const string reviewCollectionName = "Reviews";
 
-        DocumentClient client;
+        DocumentClient? client;
 
         public async Task Initialize()
         {
@@ -44,11 +44,11 @@ namespace Reviewer.Services
 
                 var businesses = new List<Business>();
 
-                var businessQuery = client.CreateDocumentQuery<Business>(
+                var businessQuery = client?.CreateDocumentQuery<Business>(
                     UriFactory.CreateDocumentCollectionUri(databaseName, businessCollectionName),
                     new FeedOptions { MaxItemCount = -1 }).AsDocumentQuery();
 
-                while (businessQuery.HasMoreResults)
+                while (businessQuery?.HasMoreResults is true)
                 {
                     var queryResults = await businessQuery.ExecuteNextAsync<Business>();
 
@@ -71,13 +71,13 @@ namespace Reviewer.Services
 
             var reviews = new List<Review>();
 
-            var reviewQuery = client.CreateDocumentQuery<Review>(
+            var reviewQuery = client?.CreateDocumentQuery<Review>(
                 UriFactory.CreateDocumentCollectionUri(databaseName, reviewCollectionName),
                 new FeedOptions { MaxItemCount = -1 })
                                     .Where(r => r.BusinessId == businessId)
                                     .AsDocumentQuery();
 
-            while (reviewQuery.HasMoreResults)
+            while (reviewQuery?.HasMoreResults is true)
             {
                 var queryResults = await reviewQuery.ExecuteNextAsync<Review>();
 
@@ -93,13 +93,13 @@ namespace Reviewer.Services
 
             var reviews = new List<Review>();
 
-            var reviewQuery = client.CreateDocumentQuery<Review>(
+            var reviewQuery = client?.CreateDocumentQuery<Review>(
                 UriFactory.CreateDocumentCollectionUri(databaseName, reviewCollectionName),
                 new FeedOptions { MaxItemCount = -1 })
                                     .Where(r => r.AuthorId == authorId)
                                     .AsDocumentQuery();
 
-            while (reviewQuery.HasMoreResults)
+            while (reviewQuery?.HasMoreResults is true)
             {
                 var queryResults = await reviewQuery.ExecuteNextAsync<Review>();
 
@@ -113,43 +113,46 @@ namespace Reviewer.Services
         {
             await Initialize();
 
-            await client.CreateDocumentAsync(
-                UriFactory.CreateDocumentCollectionUri(databaseName, reviewCollectionName),
-                review);
+            await (client?.CreateDocumentAsync(UriFactory.CreateDocumentCollectionUri(databaseName, reviewCollectionName), review) ?? Task.CompletedTask);
         }
 
         public async Task UpdateReview(Review review)
         {
             await Initialize();
 
-            var reviewUri = UriFactory.CreateDocumentUri(databaseName, reviewCollectionName, review.Id);
+            if (client != null)
+            {
+                var reviewUri = UriFactory.CreateDocumentUri(databaseName, reviewCollectionName, review.Id);
 
-            var existingDoc = (await client.ReadDocumentAsync<Review>(reviewUri)).Document;
+                var documentResponse = await client.ReadDocumentAsync<Review>(reviewUri);
+                var existingDoc = documentResponse.Document;
 
-            // Since the update of the review from the client won't have any new videos in it, need to preserve
-            // any videos that have been added via the AMS functionality
-            review.Videos = existingDoc.Videos;
+                // Since the update of the review from the client won't have any new videos in it, need to preserve
+                // any videos that have been added via the AMS functionality
+                review.Videos = existingDoc.Videos;
 
-            await client.ReplaceDocumentAsync(reviewUri, review);
+                await client.ReplaceDocumentAsync(reviewUri, review);
+            }
         }
 
         public async Task InsertBusiness(Business business)
         {
             await Initialize();
 
-            await client.CreateDocumentAsync(
-                UriFactory.CreateDocumentCollectionUri(databaseName, businessCollectionName),
-                business);
+            await (client?.CreateDocumentAsync(UriFactory.CreateDocumentCollectionUri(databaseName, businessCollectionName), business) ?? Task.CompletedTask);
         }
 
         public async Task UpdateBusiness(Business business)
         {
             await Initialize();
 
-            var businessUri = UriFactory.CreateDocumentUri(databaseName, businessCollectionName, business.Id);
-            var existingBusiness = (await client.ReadDocumentAsync<Business>(businessUri)).Document;
+            if (client != null)
+            {
+                var businessUri = UriFactory.CreateDocumentUri(databaseName, businessCollectionName, business.Id);
+                var existingBusiness = (await client.ReadDocumentAsync<Business>(businessUri)).Document;
 
-            await client.ReplaceDocumentAsync(businessUri, business);
+                await client.ReplaceDocumentAsync(businessUri, business);
+            }
         }
     }
 }

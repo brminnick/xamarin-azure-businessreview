@@ -1,14 +1,15 @@
-﻿using System;
-namespace Reviewer.Core
+﻿namespace Reviewer.Core
 {
-    public class PhotoViewerViewModel : BaseViewModel
+    class PhotoViewerViewModel : BaseViewModel
     {
         string photoUrl;
-        public string PhotoUrl { get => photoUrl; set => SetProperty(ref photoUrl, value); }
 
-        public PhotoViewerViewModel(string url)
+        public PhotoViewerViewModel(string url) => photoUrl = url;
+
+        public string PhotoUrl
         {
-            PhotoUrl = url;
+            get => photoUrl;
+            set => SetProperty(ref photoUrl, value);
         }
     }
 }

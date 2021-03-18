@@ -4,46 +4,54 @@ using Reviewer.SharedModels;
 using System.Threading.Tasks;
 using Xamarin.Forms;
 using Reviewer.Services;
+using AsyncAwaitBestPractices.MVVM;
+
 namespace Reviewer.Core
 {
-    public class EditBusinessViewModel : BaseViewModel
+    class EditBusinessViewModel : BaseViewModel
     {
-        Business business;
-        public Business Business { get => business; set => SetProperty(ref business, value); }
-
-        bool isNotNew;
-        public bool IsNotNew { get => isNotNew; set => SetProperty(ref isNotNew, value); }
+        readonly AsyncAwaitBestPractices.WeakEventManager weakEventManager = new();
 
         bool isNew;
-        public bool IsNew
+        Business business;
+
+        public EditBusinessViewModel(Business? theBusiness = null)
         {
-            get => isNew;
-            set
+            if (theBusiness is null)
             {
-                SetProperty(ref isNew, value);
-                IsNotNew = !IsNew;
+                IsNew = true;
+                business = new Business() { Id = Guid.NewGuid().ToString() };
+                Business.Address = new Address() { Id = Guid.NewGuid().ToString() };
             }
+            else
+            {
+                business = theBusiness;
+                IsNew = false;
+            }
+
+            SaveCommand = new AsyncCommand(ExecuteSaveCommand);
         }
+
+        public event EventHandler SaveComplete
+        {
+            add => weakEventManager.AddEventHandler(value);
+            remove => weakEventManager.RemoveEventHandler(value);
+        }
+
+        public bool IsNotNew => !IsNew;
 
         public ICommand SaveCommand { get; }
 
-        public event EventHandler SaveComplete;
-
-        public EditBusinessViewModel()
+        public Business Business
         {
-            IsNew = true;
-            Business = new Business() { Id = Guid.NewGuid().ToString() };
-            Business.Address = new Address() { Id = Guid.NewGuid().ToString() };
-
-            SaveCommand = new Command(async () => await ExecuteSaveCommand());
+            get => business;
+            set => SetProperty(ref business, value);
         }
 
-        public EditBusinessViewModel(Business theBusiness)
+        public bool IsNew
         {
-            Business = theBusiness;
-            IsNew = false;
-
-            SaveCommand = new Command(async () => await ExecuteSaveCommand());
+            get => isNew;
+            set => SetProperty(ref isNew, value, () => OnPropertyChanged(nameof(IsNotNew)));
         }
 
         async Task ExecuteSaveCommand()
@@ -69,7 +77,9 @@ namespace Reviewer.Core
                 IsBusy = false;
             }
 
-            SaveComplete?.Invoke(this, new EventArgs());
+            OnSaveComplete();
         }
+
+        void OnSaveComplete() => weakEventManager.RaiseEvent(this, EventArgs.Empty, nameof(SaveComplete));
     }
 }

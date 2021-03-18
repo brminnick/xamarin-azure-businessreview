@@ -1,56 +1,34 @@
 ﻿using System;
-using Reviewer.SharedModels;
-using System.Windows.Input;
-using Xamarin.Forms;
-using System.Threading.Tasks;
-using Plugin.Media.Abstractions;
-using Plugin.Media;
 using System.Collections.Generic;
 using System.IO;
-using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.Data.Common;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Windows.Input;
+using Plugin.Media;
+using Plugin.Media.Abstractions;
+using Reviewer.SharedModels;
+using Xamarin.Forms;
 
 namespace Reviewer.Core
 {
-    public class EditReviewViewModel : BaseViewModel
+    class EditReviewViewModel : BaseViewModel
     {
-        Review review;
-        public Review Review { get => review; set => SetProperty(ref review, value); }
+        readonly AsyncAwaitBestPractices.WeakEventManager weakEventManager = new();
 
         bool isNew;
-        public bool IsNew
-        {
-            get => isNew;
-            set
-            {
-                SetProperty(ref isNew, value);
-                IsNotNew = !IsNew;
-            }
-        }
-
-        bool isNotNew;
-        public bool IsNotNew { get => isNotNew; set => SetProperty(ref isNotNew, value); }
-
-        List<ImageSource> photos;
-        public List<ImageSource> Photos { get => photos; set => SetProperty(ref photos, value); }
-
-        List<ImageSource> videos;
-        public List<ImageSource> Videos { get => videos; set => SetProperty(ref videos, value); }
-
-        public ICommand SaveCommand { get; }
-
-        public event EventHandler SaveComplete;
-
-        public ICommand TakePhotoCommand { get; }
+        List<ImageSource> photos = Enumerable.Empty<ImageSource>().ToList();
+        List<ImageSource> videos = Enumerable.Empty<ImageSource>().ToList();
 
         IIdentityService idService;
 
+        public EditReviewViewModel(string businessId, string businessName) :
+            this(new Review { Id = Guid.NewGuid().ToString(), BusinessId = businessId, BusinessName = businessName })
+        {
+            IsNew = true;
+        }
+
         public EditReviewViewModel(Review theReview)
         {
-            Photos = new List<ImageSource>();
-            Videos = new List<ImageSource>();
-
             Review = theReview;
 
             SaveCommand = new Command(async () => await ExecuteSaveCommand());
@@ -100,10 +78,35 @@ namespace Reviewer.Core
             Videos.Insert(0, ImageSource.FromFile("ic_movie_black"));
         }
 
-        public EditReviewViewModel(string businessId, string businessName) :
-            this(new Review { Id = Guid.NewGuid().ToString(), BusinessId = businessId, BusinessName = businessName })
+        public event EventHandler SaveComplete
         {
-            IsNew = true;
+            add => weakEventManager.AddEventHandler(value);
+            remove => weakEventManager.RemoveEventHandler(value);
+        }
+
+        public ICommand SaveCommand { get; }
+        public ICommand TakePhotoCommand { get; }
+
+        public Review Review { get; }
+
+        public bool IsNew
+        {
+            get => isNew;
+            set => SetProperty(ref isNew, value, () => OnPropertyChanged(nameof(IsNotNew)));
+        }
+
+        public bool IsNotNew => !IsNew;
+
+        public List<ImageSource> Photos
+        {
+            get => photos;
+            set => SetProperty(ref photos, value);
+        }
+
+        public List<ImageSource> Videos
+        {
+            get => videos;
+            set => SetProperty(ref videos, value);
         }
 
         async Task ExecuteSaveCommand()
@@ -116,6 +119,8 @@ namespace Reviewer.Core
                 IsBusy = true;
 
                 var authResult = await idService.GetCachedSignInToken();
+                if (authResult is null)
+                    return;
 
                 var webAPI = DependencyService.Get<IAPIService>();
 
@@ -132,7 +137,7 @@ namespace Reviewer.Core
                 IsBusy = false;
             }
 
-            SaveComplete?.Invoke(this, new EventArgs());
+            OnSaveComplete();
         }
 
         async Task ExecuteTakePhotoCommand()
@@ -158,10 +163,10 @@ namespace Reviewer.Core
 
                 var result = await Application.Current.MainPage.DisplayActionSheet("Take or Pick Photo", "Cancel", null, actions.ToArray());
 
-
                 bool isVideo = false;
-                MediaFile mediaFile = null;
-                if (result == "Take Photo")
+                MediaFile? mediaFile = null;
+
+                if (result is "Take Photo")
                 {
                     var options = new StoreCameraMediaOptions
                     {
@@ -171,7 +176,7 @@ namespace Reviewer.Core
 
                     mediaFile = await CrossMedia.Current.TakePhotoAsync(options);
                 }
-                else if (result == "Take Video")
+                else if (result is "Take Video")
                 {
                     var options = new StoreVideoOptions
                     {
@@ -184,12 +189,12 @@ namespace Reviewer.Core
                     mediaFile = await CrossMedia.Current.TakeVideoAsync(options);
                     isVideo = true;
                 }
-                else if (result == "Pick Photo")
+                else if (result is "Pick Photo")
                 {
                     mediaFile = await CrossMedia.Current.PickPhotoAsync();
                 }
 
-                if (mediaFile == null)
+                if (mediaFile is null)
                     return;
 
                 if (isVideo)
@@ -207,48 +212,47 @@ namespace Reviewer.Core
         {
             UploadProgress progressUpdater = new UploadProgress();
 
-            using (var mediaStream = mediaFile.GetStream())
+            using var mediaStream = mediaFile.GetStream();
+            var storageService = DependencyService.Get<IStorageService>();
+
+            var blobAddress = await storageService.UploadBlob(mediaStream, false, Review.Id, progressUpdater);
+
+            if (blobAddress is null)
             {
-                var storageService = DependencyService.Get<IStorageService>();
+                await Application.Current.MainPage.DisplayAlert("Upload Error", "There was an error uploading your photo, please try again.", "OK");
+                return;
+            }
 
-                var blobAddress = await storageService.UploadBlob(mediaStream, false, Review.Id, progressUpdater);
+            var thePhotos = new List<ImageSource>();
+            thePhotos.AddRange(Photos);
+            thePhotos.Add(ImageSource.FromUri(blobAddress));
 
-                if (blobAddress == null)
-                {
-                    await Application.Current.MainPage.DisplayAlert("Upload Error", "There was an error uploading your photo, please try again.", "OK");
-                    return;
-                }
+            Photos = thePhotos;
 
-                var thePhotos = new List<ImageSource>();
-                thePhotos.AddRange(Photos);
-                thePhotos.Add(ImageSource.FromUri(blobAddress));
+            Review.Photos.Add(blobAddress.AbsoluteUri);
 
-                Photos = thePhotos;
-
-                Review.Photos.Add(blobAddress.AbsoluteUri);
-
-                if (!IsNew)
-                {
-                    var functionApi = DependencyService.Get<IAPIService>();
-                    await functionApi.WritePhotoInfoToQueue(Review.Id, blobAddress.AbsoluteUri);
-                }
+            if (!IsNew)
+            {
+                var functionApi = DependencyService.Get<IAPIService>();
+                await functionApi.WritePhotoInfoToQueue(Review.Id, blobAddress.AbsoluteUri);
             }
         }
 
         async Task UploadVideo(MediaFile mediaFile)
         {
-            using (var mediaStream = await ConvertToMP4(mediaFile))
-            {
-                UploadProgress progressUpdater = new UploadProgress();
+            using var mediaStream = await ConvertToMP4(mediaFile);
+            if (mediaStream is null)
+                return;
 
-                var storageService = DependencyService.Get<IStorageService>();
-                var blobAddress = await storageService.UploadBlob(mediaStream, true, Review.Id, progressUpdater);
+            var progressUpdater = new UploadProgress();
 
-                await Application.Current.MainPage.DisplayAlert("Video Upload", "We're processing your video! It'll be visible here as soon as we're done!", "OK");
-            }
+            var storageService = DependencyService.Get<IStorageService>();
+            var blobAddress = await storageService.UploadBlob(mediaStream, true, Review.Id, progressUpdater);
+
+            await Application.Current.MainPage.DisplayAlert("Video Upload", "We're processing your video! It'll be visible here as soon as we're done!", "OK");
         }
 
-        async Task<Stream> ConvertToMP4(MediaFile file)
+        async Task<Stream?> ConvertToMP4(MediaFile file)
         {
             if (file.Path.EndsWith("mp4", StringComparison.OrdinalIgnoreCase))
                 return file.GetStream();
@@ -259,5 +263,7 @@ namespace Reviewer.Core
 
             return await videoConverter.ConvertToMP4(file.Path);
         }
+
+        void OnSaveComplete() => weakEventManager.RaiseEvent(this, EventArgs.Empty, nameof(SaveComplete));
     }
 }

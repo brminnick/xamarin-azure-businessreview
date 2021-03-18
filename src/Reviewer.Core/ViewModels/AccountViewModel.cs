@@ -1,26 +1,64 @@
 ﻿using System;
-using System.Windows.Input;
-using System.Threading.Tasks;
-using Microsoft.Identity.Client;
-using Xamarin.Forms;
-using Reviewer.SharedModels;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Windows.Input;
+using AsyncAwaitBestPractices;
+using AsyncAwaitBestPractices.MVVM;
+using Microsoft.Identity.Client;
+using Reviewer.SharedModels;
+using Xamarin.Forms;
 
 namespace Reviewer.Core
 {
-    public class AccountViewModel : BaseViewModel
+    class AccountViewModel : BaseViewModel
     {
+        const string notLoggedInInfo = "Sign in to unlock the wonderful world of reviews!";
+        const string loggedInInfo = "Hiya {user}! Here are your reviews so far!";
+
+        readonly AsyncAwaitBestPractices.WeakEventManager weakEventManager = new();
+        readonly IIdentityService identityService = DependencyService.Get<IIdentityService>();
+
+        bool loggedIn = false;
+        bool notLoggedIn = true;
+
+        string info = notLoggedInInfo;
+
+        List<Review> reviews = Enumerable.Empty<Review>().ToList();
+
+        AuthenticationResult? authResult;
+
+        public AccountViewModel()
+        {
+            SignInCommand = new AsyncCommand(ExecuteSignInCommand);
+            RefreshCommand = new AsyncCommand(ExecuteRefreshCommand);
+            SignOutCommand = new Command(ExecuteSignOutCommand);
+
+            CheckLoginStatus().SafeFireAndForget();
+        }
+
+        public event EventHandler SuccessfulSignIn
+        {
+            add => weakEventManager.AddEventHandler(value);
+            remove => weakEventManager.RemoveEventHandler(value);
+        }
+
+        public event EventHandler UnsuccessfulSignIn
+        {
+            add => weakEventManager.AddEventHandler(value);
+            remove => weakEventManager.RemoveEventHandler(value);
+        }
+
         public ICommand SignInCommand { get; }
         public ICommand RefreshCommand { get; }
         public ICommand SignOutCommand { get; }
 
-        public event EventHandler SuccessfulSignIn;
-        public event EventHandler UnsuccessfulSignIn;
+        public bool NotLoggedIn
+        {
+            get => notLoggedIn;
+            set => SetProperty(ref notLoggedIn, value);
+        }
 
-        List<Review> reviews;
-        public List<Review> Reviews { get => reviews; set => SetProperty(ref reviews, value); }
-
-        bool loggedIn = false;
         public bool LoggedIn
         {
             get => loggedIn;
@@ -31,32 +69,16 @@ namespace Reviewer.Core
             }
         }
 
-        bool notLoggedIn = true;
-        public bool NotLoggedIn { get => notLoggedIn; set => SetProperty(ref notLoggedIn, value); }
-
-        string info;
-        public string Info { get => info; set => SetProperty(ref info, value); }
-
-        string notLoggedInInfo = "Sign in to unlock the wonderful world of reviews!";
-        string loggedInInfo = "Hiya {user}! Here are your reviews so far!";
-
-        AuthenticationResult authResult;
-
-        IIdentityService identityService;
-
-        public AccountViewModel()
+        public List<Review> Reviews
         {
-            Reviews = new List<Review>();
+            get => reviews;
+            set => SetProperty(ref reviews, value);
+        }
 
-            SignInCommand = new Command(async () => await ExecuteSignInCommand());
-            RefreshCommand = new Command(async () => await ExecuteRefreshCommand());
-            SignOutCommand = new Command(() => ExecuteSignOutCommand());
-
-            Info = notLoggedInInfo;
-
-            identityService = DependencyService.Get<IIdentityService>();
-
-            Task.Run(async () => await CheckLoginStatus());
+        public string Info
+        {
+            get => info;
+            set => SetProperty(ref info, value);
         }
 
         void ExecuteSignOutCommand()
@@ -102,7 +124,8 @@ namespace Reviewer.Core
             {
                 LoggedIn = false;
                 Info = notLoggedInInfo;
-                UnsuccessfulSignIn?.Invoke(this, new EventArgs());
+
+                OnUnsuccessfulSignIn();
             }
             else
             {
@@ -111,7 +134,7 @@ namespace Reviewer.Core
 
                 await ExecuteRefreshCommand();
 
-                SuccessfulSignIn?.Invoke(this, new EventArgs());
+                OnSuccessfulSignIn();
             }
         }
 
@@ -164,5 +187,8 @@ namespace Reviewer.Core
                 IsBusy = false;
             }
         }
+
+        void OnSuccessfulSignIn() => weakEventManager.RaiseEvent(this, EventArgs.Empty, nameof(SuccessfulSignIn));
+        void OnUnsuccessfulSignIn() => weakEventManager.RaiseEvent(this, EventArgs.Empty, nameof(UnsuccessfulSignIn));
     }
 }

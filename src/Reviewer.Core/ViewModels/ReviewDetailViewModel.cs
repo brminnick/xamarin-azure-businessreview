@@ -3,37 +3,53 @@ using Reviewer.SharedModels;
 using Xamarin.Forms;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using AsyncAwaitBestPractices;
+
 namespace Reviewer.Core
 {
-    public class ReviewDetailViewModel : BaseViewModel
+    class ReviewDetailViewModel : BaseViewModel
     {
-        Review review;
-        public Review Review { get => review; set => SetProperty(ref review, value); }
-
-        Business business;
-        public Business Business { get => business; set => SetProperty(ref business, value); }
-
         bool editable;
-        public bool Editable { get => editable; set => SetProperty(ref editable, value); }
+
+        Review review;
+        Business business;
 
         public ReviewDetailViewModel(Review review, Business business)
         {
-            Review = review;
-            Business = business;
+            this.review = review;
+            this.business = business;
 
             Title = "Details";
 
-            var idService = DependencyService.Get<IIdentityService>();
+            Initialize().SafeFireAndForget();
+        }
 
-            Task.Run(async () =>
-            {
-                var cachedResult = await idService.GetCachedSignInToken();
+        public Review Review
+        {
+            get => review;
+            set => SetProperty(ref review, value);
+        }
 
-                if (cachedResult?.UniqueId == Review.AuthorId)
-                    Editable = true;
-                else
-                    Editable = false;
-            });
+        public Business Business
+        {
+            get => business;
+            set => SetProperty(ref business, value);
+        }
+
+        public bool Editable
+        {
+            get => editable;
+            set => SetProperty(ref editable, value);
+        }
+
+        async Task Initialize()
+        {
+            var cachedResult = await DependencyService.Get<IIdentityService>().GetCachedSignInToken();
+
+            if (Review?.AuthorId is not null && cachedResult?.UniqueId == Review.AuthorId)
+                Editable = true;
+            else
+                Editable = false;
         }
     }
 }

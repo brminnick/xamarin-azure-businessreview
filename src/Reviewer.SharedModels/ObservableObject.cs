@@ -2,13 +2,21 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using AsyncAwaitBestPractices;
+
 namespace Reviewer.SharedModels
 {
     public class ObservableObject : INotifyPropertyChanged
     {
-        public event PropertyChangedEventHandler PropertyChanged;
+        readonly WeakEventManager propertyChangedEventManager = new();
 
-        public void SetProperty<T>(ref T backingStore, T value, Action onChanged = null, [CallerMemberName]string propertyName = "")
+        event PropertyChangedEventHandler INotifyPropertyChanged.PropertyChanged
+        {
+            add => propertyChangedEventManager.AddEventHandler(value);
+            remove => propertyChangedEventManager.RemoveEventHandler(value);
+        }
+
+        public void SetProperty<T>(ref T backingStore, T value, Action? onChanged = null, [CallerMemberName] string propertyName = "")
         {
             if (EqualityComparer<T>.Default.Equals(backingStore, value))
                 return;
@@ -17,10 +25,10 @@ namespace Reviewer.SharedModels
 
             onChanged?.Invoke();
 
-            HandlePropertyChanged(propertyName);
+            OnPropertyChanged(propertyName);
         }
 
-        void HandlePropertyChanged(string propertyName = "") =>
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        protected void OnPropertyChanged(string propertyName = "") =>
+            propertyChangedEventManager?.RaiseEvent(this, new PropertyChangedEventArgs(propertyName), nameof(INotifyPropertyChanged.PropertyChanged));
     }
 }

@@ -1,15 +1,14 @@
-﻿using System;
+﻿using System.Threading.Tasks;
 using Microsoft.Identity.Client;
-using System.Threading.Tasks;
+
 namespace Reviewer.Core
 {
     public interface IIdentityService
     {
         string DisplayName { get; set; }
 
-        Task<AuthenticationResult> Login();
-        Task<AuthenticationResult> GetCachedSignInToken();
+        Task<AuthenticationResult?> Login();
+        Task<AuthenticationResult?> GetCachedSignInToken();
         void Logout();
-        UIParent UIParent { get; set; }
     }
 }

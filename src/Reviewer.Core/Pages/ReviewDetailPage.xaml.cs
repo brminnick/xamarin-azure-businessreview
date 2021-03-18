@@ -1,28 +1,24 @@
 ﻿using System;
-using System.Collections.Generic;
-
-using Xamarin.Forms;
 using Reviewer.SharedModels;
+using Xamarin.Forms;
 
 namespace Reviewer.Core
 {
     public partial class ReviewDetailPage : ContentPage
     {
-        ReviewDetailViewModel vm;
-        public ReviewDetailPage(Review review, Business business)
+        readonly ReviewDetailViewModel vm;
+
+        public ReviewDetailPage(Review review, Business business) : this()
         {
-            InitializeComponent();
-
-            vm = new ReviewDetailViewModel(review, business);
-            vm.Title = "Review Details";
-
-            BindingContext = vm;
+            BindingContext = vm = new ReviewDetailViewModel(review, business)
+            {
+                Title = "Review Details"
+            };
         }
 
-        public ReviewDetailPage()
-        {
-            InitializeComponent();
-        }
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+        public ReviewDetailPage() => InitializeComponent();
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
         protected override void OnAppearing()
         {
@@ -40,10 +36,10 @@ namespace Reviewer.Core
 
         async void VideoList_SelectedItemChanged(object sender, EventArgs e)
         {
-            if (!(sender is HorizontalList horizontalList))
+            if (sender is not HorizontalList horizontalList)
                 return;
 
-            if (!(horizontalList.SelectedItem is Video video))
+            if (horizontalList.SelectedItem is not Video video)
                 return;
 
             var videoPlayer = new NavigationPage(new VideoPlayerPage(video));
@@ -53,10 +49,10 @@ namespace Reviewer.Core
 
         async void PhotoList_SelectedItemChanged(object sender, EventArgs e)
         {
-            if (!(sender is HorizontalList horizontalList))
+            if (sender is not HorizontalList horizontalList)
                 return;
 
-            if (!(horizontalList.SelectedItem is string photoUrl))
+            if (horizontalList.SelectedItem is not string photoUrl)
                 return;
 
             var photoViewer = new NavigationPage(new PhotoViewerPage(photoUrl));

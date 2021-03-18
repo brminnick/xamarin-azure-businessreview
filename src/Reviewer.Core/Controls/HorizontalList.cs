@@ -11,18 +11,8 @@ using Xamarin.Forms;
 
 namespace Reviewer.Core
 {
-    public class HorizontalList : Grid
+    class HorizontalList : Grid
     {
-        private ICommand _innerSelectedCommand;
-        private readonly ScrollView _scrollView;
-        private readonly StackLayout _itemsStackLayout;
-
-        public event EventHandler SelectedItemChanged;
-
-        public StackOrientation ListOrientation { get; set; }
-
-        public double Spacing { get; set; }
-
         public static readonly BindableProperty SelectedCommandProperty =
             BindableProperty.Create("SelectedCommand", typeof(ICommand), typeof(HorizontalList), null);
 
@@ -35,41 +25,18 @@ namespace Reviewer.Core
         public static readonly BindableProperty ItemTemplateProperty =
             BindableProperty.Create("ItemTemplate", typeof(DataTemplate), typeof(HorizontalList), default(DataTemplate));
 
-        public ICommand SelectedCommand
-        {
-            get { return (ICommand)GetValue(SelectedCommandProperty); }
-            set { SetValue(SelectedCommandProperty, value); }
-        }
+        readonly AsyncAwaitBestPractices.WeakEventManager weakEventManager = new();
 
-        public IEnumerable ItemsSource
-        {
-            get { return (IEnumerable)GetValue(ItemsSourceProperty); }
-            set { SetValue(ItemsSourceProperty, value); }
-        }
+        readonly ScrollView scrollView;
+        readonly StackLayout itemsStackLayout;
 
-        public object SelectedItem
-        {
-            get { return (object)GetValue(SelectedItemProperty); }
-            set { SetValue(SelectedItemProperty, value); }
-        }
-
-        public DataTemplate ItemTemplate
-        {
-            get { return (DataTemplate)GetValue(ItemTemplateProperty); }
-            set { SetValue(ItemTemplateProperty, value); }
-        }
-
-        private static void ItemsSourceChanged(BindableObject bindable, object oldValue, object newValue)
-        {
-            var itemsLayout = (HorizontalList)bindable;
-            itemsLayout.SetItems();
-        }
+        ICommand? _innerSelectedCommand;
 
         public HorizontalList()
         {
-            _scrollView = new ScrollView();
+            scrollView = new ScrollView();
 
-            _itemsStackLayout = new StackLayout
+            itemsStackLayout = new StackLayout
             {
                 BackgroundColor = BackgroundColor,
                 Padding = Padding,
@@ -77,15 +44,52 @@ namespace Reviewer.Core
                 HorizontalOptions = LayoutOptions.FillAndExpand
             };
 
-            _scrollView.BackgroundColor = BackgroundColor;
-            _scrollView.Content = _itemsStackLayout;
-            Children.Add(_scrollView);
+            scrollView.BackgroundColor = BackgroundColor;
+            scrollView.Content = itemsStackLayout;
+
+            Children.Add(scrollView);
         }
+
+        public event EventHandler SelectedItemChanged
+        {
+            add => weakEventManager.AddEventHandler(value);
+            remove => weakEventManager.RemoveEventHandler(value);
+        }
+
+        public ICommand? SelectedCommand
+        {
+            get { return (ICommand?)GetValue(SelectedCommandProperty); }
+            set { SetValue(SelectedCommandProperty, value); }
+        }
+
+        public IEnumerable? ItemsSource
+        {
+            get { return (IEnumerable?)GetValue(ItemsSourceProperty); }
+            set { SetValue(ItemsSourceProperty, value); }
+        }
+
+        public object? SelectedItem
+        {
+            get { return GetValue(SelectedItemProperty); }
+            set { SetValue(SelectedItemProperty, value); }
+        }
+
+        public DataTemplate? ItemTemplate
+        {
+            get { return (DataTemplate?)GetValue(ItemTemplateProperty); }
+            set { SetValue(ItemTemplateProperty, value); }
+        }
+
+        public StackOrientation ListOrientation { get; set; }
+
+        public double Spacing { get; set; }
+
+        public void RaiseSelectedItemChanged() => weakEventManager.RaiseEvent(this, EventArgs.Empty, nameof(SelectedItemChanged));
 
         protected virtual void SetItems()
         {
-            _itemsStackLayout.Children.Clear();
-            _itemsStackLayout.Spacing = Spacing;
+            itemsStackLayout.Children.Clear();
+            itemsStackLayout.Spacing = Spacing;
 
             _innerSelectedCommand = new Command<View>(view =>
             {
@@ -93,10 +97,10 @@ namespace Reviewer.Core
                 SelectedItem = null; // Allowing item second time selection
             });
 
-            _itemsStackLayout.Orientation = ListOrientation;
-            _scrollView.Orientation = ListOrientation == StackOrientation.Horizontal
-                ? ScrollOrientation.Horizontal
-                : ScrollOrientation.Vertical;
+            itemsStackLayout.Orientation = ListOrientation;
+            scrollView.Orientation = ListOrientation is StackOrientation.Horizontal
+                                        ? ScrollOrientation.Horizontal
+                                        : ScrollOrientation.Vertical;
 
             if (ItemsSource == null)
             {
@@ -105,19 +109,18 @@ namespace Reviewer.Core
 
             foreach (var item in ItemsSource)
             {
-                _itemsStackLayout.Children.Add(GetItemView(item));
+                itemsStackLayout.Children.Add(GetItemView(item));
             }
 
-            _itemsStackLayout.BackgroundColor = BackgroundColor;
+            itemsStackLayout.BackgroundColor = BackgroundColor;
             SelectedItem = null;
         }
 
-        protected virtual View GetItemView(object item)
+        protected virtual View? GetItemView(object item)
         {
-            var content = ItemTemplate.CreateContent();
-            var view = content as View;
+            var content = ItemTemplate?.CreateContent();
 
-            if (view == null)
+            if (content is not View view)
             {
                 return null;
             }
@@ -135,13 +138,11 @@ namespace Reviewer.Core
             return view;
         }
 
-        private void AddGesture(View view, TapGestureRecognizer gesture)
+        void AddGesture(View view, TapGestureRecognizer gesture)
         {
             view.GestureRecognizers.Add(gesture);
 
-            var layout = view as Layout<View>;
-
-            if (layout == null)
+            if (view is not Layout<View> layout)
             {
                 return;
             }
@@ -152,20 +153,26 @@ namespace Reviewer.Core
             }
         }
 
-        private static void OnSelectedItemChanged(BindableObject bindable, object oldValue, object newValue)
+        static void OnSelectedItemChanged(BindableObject bindable, object oldValue, object newValue)
         {
-            var itemsView = (HorizontalList)bindable;
             if (newValue == oldValue && newValue != null)
             {
                 return;
             }
 
-            itemsView.SelectedItemChanged?.Invoke(itemsView, EventArgs.Empty);
+            var itemsView = (HorizontalList)bindable;
+            itemsView.RaiseSelectedItemChanged();
 
             if (itemsView.SelectedCommand?.CanExecute(newValue) ?? false)
             {
                 itemsView.SelectedCommand?.Execute(newValue);
             }
+        }
+
+        static void ItemsSourceChanged(BindableObject bindable, object oldValue, object newValue)
+        {
+            var itemsLayout = (HorizontalList)bindable;
+            itemsLayout.SetItems();
         }
     }
 }

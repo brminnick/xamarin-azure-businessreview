@@ -12,7 +12,7 @@ namespace Reviewer.Core
         {
         }
 
-        public async Task<List<Business>> GetBusinesses()
+        public Task<List<Business>> GetBusinesses()
         {
             var business1Id = Guid.NewGuid().ToString();
             var business2Id = Guid.NewGuid().ToString();
@@ -52,7 +52,7 @@ namespace Reviewer.Core
                 RecentReviews = new List<Review> { review2 }
             };
 
-            return await Task.FromResult(new List<Business> { business1, business2 });
+            return Task.FromResult(new List<Business> { business1, business2 });
         }
 
         public Task InsertBusiness(Business business)

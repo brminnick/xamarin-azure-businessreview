@@ -1,15 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
-
-using Xamarin.Forms;
 using Reviewer.SharedModels;
+using Xamarin.Forms;
 
 namespace Reviewer.Core
 {
     public partial class AccountPage : ContentPage
     {
+        readonly AccountViewModel vm;
 
-        AccountViewModel vm;
         public AccountPage()
         {
             InitializeComponent();
@@ -25,8 +23,8 @@ namespace Reviewer.Core
         {
             base.OnAppearing();
 
-            vm.UnsuccessfulSignIn += UnSuccessfulSignIn;
-            authorReviewList.ItemSelected += listItemSelected;
+            vm.UnsuccessfulSignIn += UnsuccessfulSignIn;
+            authorReviewList.ItemSelected += ListItemSelected;
 
             vm.RefreshCommand.Execute(null);
         }
@@ -35,20 +33,18 @@ namespace Reviewer.Core
         {
             base.OnDisappearing();
 
-            vm.UnsuccessfulSignIn -= UnSuccessfulSignIn;
-            authorReviewList.ItemSelected -= listItemSelected;
+            vm.UnsuccessfulSignIn -= UnsuccessfulSignIn;
+            authorReviewList.ItemSelected -= ListItemSelected;
         }
 
-        protected async void listItemSelected(object sender, SelectedItemChangedEventArgs args)
+        protected async void ListItemSelected(object sender, SelectedItemChangedEventArgs args)
         {
-            var review = args.SelectedItem as Review;
-
-            if (review == null)
+            if (args.SelectedItem is not Review review)
                 return;
 
             await Navigation.PushAsync(new EditReviewPage(review));
         }
 
-        async void UnSuccessfulSignIn(object sender, EventArgs e) => await DisplayAlert("Error", "Couldn't log in, try again!", "OK");
+        async void UnsuccessfulSignIn(object sender, EventArgs e) => await DisplayAlert("Error", "Couldn't log in, try again!", "OK");
     }
 }
